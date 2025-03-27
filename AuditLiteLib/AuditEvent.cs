@@ -1,16 +1,24 @@
-﻿namespace AuditLiteLib;
+﻿using ProtoBuf;
+using ProtoBuf.WellKnownTypes;
 
+namespace AuditLiteLib;
+
+[ProtoContract]
 public class AuditEvent
 {
-    private string EventType { get; set; }
-    private EventEnvironment EventEnvironment { get; set; }
-    private DateTime EventDate { get; set; }
-    private Dictionary<string, object>? OptionalFields { get; set; } 
-    public AuditEvent(string eventType, EventEnvironment eventEnvironment, Dictionary<string, object>? optionalFields = null)
+    [ProtoMember(1)]
+    public string EventType { get; set; }
+    [ProtoMember(2)]
+    public EventEnvironment EventEnvironment { get; set; }
+    [ProtoMember(3)]
+    public Timestamp EventDate { get; set; }
+    [ProtoMember(4)]
+    public Dictionary<string, string>? CustomFields { get; set; } 
+    public AuditEvent(string eventType, Dictionary<string, string>? customFields = null)
     {
         EventType = eventType;
-        EventEnvironment = eventEnvironment;
-        OptionalFields = optionalFields;
-        EventDate = DateTime.Now;
+        CustomFields = customFields;
+        EventEnvironment = new EventEnvironment();
+        EventDate = new Timestamp(DateTime.UtcNow);
     }
 }

@@ -7,6 +7,6 @@ public class AuditManager
     public void CreateAuditEvent(string eventType, Dictionary<string, object>? optionalFields)
     {
         AuditEvents = new List<AuditEvent>();
-        AuditEvents.Add(new AuditEvent(eventType, new EventEnvironment(), optionalFields));
+        //AuditEvents.Add(new AuditEvent(eventType, new EventEnvironment(), optionalFields));
     }
 }

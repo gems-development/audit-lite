@@ -1,0 +1,20 @@
+﻿syntax = "proto3";
+
+package auditlitelib.protos;
+
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+
+message EventEnvironment {
+  string user_name = 1;
+  string method_name = 2;
+  string machine_name = 3;
+  string ip_address = 4;
+}
+
+message AuditEvent {
+  string event_type = 1;
+  EventEnvironment event_environment = 2;
+  google.protobuf.Timestamp event_date = 3;
+  map<string, string> custom_fields = 4;  
+}

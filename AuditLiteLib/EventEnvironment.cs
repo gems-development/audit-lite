@@ -1,15 +1,21 @@
 ﻿using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
+using ProtoBuf;
 
 namespace AuditLiteLib;
 
+[ProtoContract]
 public class EventEnvironment
 {
-    private string UserName { get; set; }
-    private string MethodName { get; set; }
-    private string MachineName { get; set; }
-    private string IpAddress { get; set; }
+    [ProtoMember(1)]
+    public string UserName { get; }
+    [ProtoMember(2)]
+    public string MethodName { get; }
+    [ProtoMember(3)]
+    public string MachineName { get; }
+    [ProtoMember(4)]
+    public string IpAddress { get; }
 
     public EventEnvironment()
     {
