@@ -15,19 +15,24 @@ internal static class Program
             .Build();
         
         var eventBuffer = new EventBuffer(
-            flushIntervalMilliseconds: auditConfig.FlushIntervalMilliseconds,
             maxBufferSize: auditConfig.MaxBufferSize
         );
+        
+        var auditManager = new AuditManager(auditConfig);
 
         Console.WriteLine("Начало теста...");
             
             // Эмуляция многопоточности.
-        await Parallel.ForEachAsync(Enumerable.Range(1, 30), async (i, cancellationToken) =>
+            await Parallel.ForEachAsync(Enumerable.Range(1, 30), async (i, cancellationToken) =>
         {
-            AuditEvent eventData = new AuditEvent($"Событие {i}");
+            var eventData = new Dictionary<string, object>
+            {
+                { "Key1", $"Value{i}" },
+                { "Key2", i }
+            };
             var threadId = Thread.CurrentThread.ManagedThreadId;
             Console.WriteLine($"[Поток {threadId}] Добавлено: {eventData}");
-            await eventBuffer.AddEventAsync(eventData);
+            await auditManager.CreateAuditEvent("testType", eventData);
             
             await Task.Delay(3000, cancellationToken);
         });

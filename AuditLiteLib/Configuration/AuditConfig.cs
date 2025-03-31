@@ -4,7 +4,7 @@ public class AuditConfig
 {
     public required string PredefinedConfigName { get; set;}
     public required string ServerUrl { get; set; }
-    public int FlushIntervalMilliseconds { get; set; }
+    public long FlushIntervalMilliseconds { get; set; }
     public int MaxBufferSize { get; set; }
     public bool EnableProtobufSerialization { get; set; }
 
