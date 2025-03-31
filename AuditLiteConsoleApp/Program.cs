@@ -24,7 +24,7 @@ internal static class Program
             // Эмуляция многопоточности.
         await Parallel.ForEachAsync(Enumerable.Range(1, 30), async (i, cancellationToken) =>
         {
-            var eventData = $"Событие {i}";
+            AuditEvent eventData = new AuditEvent($"Событие {i}");
             var threadId = Thread.CurrentThread.ManagedThreadId;
             Console.WriteLine($"[Поток {threadId}] Добавлено: {eventData}");
             await eventBuffer.AddEventAsync(eventData);

@@ -8,7 +8,7 @@ using System.Threading;
 
 public class EventBuffer
 {
-    private readonly ConcurrentQueue<string> _buffer = new();
+    private readonly ConcurrentQueue<AuditEvent> _buffer = new();
     private readonly int _maxBufferSize;
     private readonly int _flushInterval;
     private readonly Timer _timer;
@@ -21,7 +21,7 @@ public class EventBuffer
         _timer = new Timer(async _ => await FlushAsync(), null, _flushInterval, Timeout.Infinite);
     }
     
-    public async Task AddEventAsync(string eventData)
+    public async Task AddEventAsync(AuditEvent eventData)
     {
         await Task.Run(() => _buffer.Enqueue(eventData));
 
@@ -39,7 +39,7 @@ public class EventBuffer
     
     private async Task FlushAsync()
     {
-        var eventsToFlush = new List<string>();
+        var eventsToFlush = new List<AuditEvent>();
         while (_buffer.TryDequeue(out var eventData))
         {
             eventsToFlush.Add(eventData);
@@ -53,7 +53,7 @@ public class EventBuffer
         _timer.Change(_flushInterval, Timeout.Infinite); // Перезапуск таймера
     }
     
-    private async Task SendEventsAsync(IEnumerable<string> events)
+    private async Task SendEventsAsync(List<AuditEvent> events)
     {
         await Task.Delay(100);
         Console.WriteLine($"Отправлено {events.Count()} событий.");
