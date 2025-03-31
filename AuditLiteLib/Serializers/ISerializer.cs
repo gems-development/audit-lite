@@ -2,5 +2,5 @@
 
 public interface ISerializer
 {
-    public static abstract Object Serialize (AuditEvent auditEvent);
+    public static abstract byte[] Serialize (AuditEvent auditEvent);
 }
