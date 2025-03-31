@@ -1,4 +1,6 @@
-﻿namespace AuditLiteLib;
+﻿using System.Collections.Concurrent;
+
+namespace AuditLiteLib;
 
 using System;
 using System.Collections.Generic;
@@ -6,63 +8,54 @@ using System.Threading;
 
 public class EventBuffer
 {
-    private readonly Queue<string> _buffer = new();
+    private readonly ConcurrentQueue<string> _buffer = new();
     private readonly int _maxBufferSize;
-    private readonly int _flushInterval; // Интервал для таймера отправки в миллисекундах
+    private readonly int _flushInterval;
     private readonly Timer _timer;
-    private readonly object _lock = new();
 
     public EventBuffer(int flushIntervalMilliseconds = 300000, int maxBufferSize = 100)
     {
         _flushInterval = flushIntervalMilliseconds;
         _maxBufferSize = maxBufferSize;
-        // Запускаем таймер, с методом обратног овызова Flush. Передаем null в переменной state.
-        // flushInterval - время действия таймера. Timeout.Infinite - только ручной перезапуск таймера.
-        _timer = new Timer(Flush, null, _flushInterval, Timeout.Infinite);
+        // Timeout.Infinite - только ручной перезапуск таймера.
+        _timer = new Timer(async _ => await FlushAsync(), null, _flushInterval, Timeout.Infinite);
     }
-
-    public void AddEvent(string eventData)
+    
+    public async Task AddEventAsync(string eventData)
     {
-        lock (_lock)
-        {
-            _buffer.Enqueue(eventData); // Добавляем событие в буфер
+        await Task.Run(() => _buffer.Enqueue(eventData));
 
-            // Проверяем, не превышен ли максимальный размер буфера
-            if (_buffer.Count >= _maxBufferSize)
-            {
-                Flush(null);
-            }
+        if (_buffer.Count >= _maxBufferSize)
+        {
+            await FlushAsync();
         }
     }
     
-    public void Stop()
+    public async Task StopAsync()
     {
-        // Останавливаем таймер и отправляем скопившиеся события
         _timer.Dispose();
-        Flush(null);
+        await FlushAsync(); // Асинхронное опустошение очереди
     }
     
-    private void Flush(object? state)
+    private async Task FlushAsync()
     {
-        List<string> eventsToFlush;
-
-        lock (_lock)
+        var eventsToFlush = new List<string>();
+        while (_buffer.TryDequeue(out var eventData))
         {
-            if (_buffer.Count == 0)
-            {
-                // Если буфер пуст, перезапускаем таймер
-                _timer.Change(_flushInterval, Timeout.Infinite);
-                return;
-            }
-            
-            eventsToFlush = new List<string>(_buffer);
-            _buffer.Clear();
+            eventsToFlush.Add(eventData);
         }
 
-        // Отправляем события. Логика работы с сервером.
-        Console.WriteLine($"Отправлено {eventsToFlush.Count} событий: {string.Join(", ", eventsToFlush)}");
+        if (eventsToFlush.Count > 0)
+        {
+            await SendEventsAsync(eventsToFlush); // Отправка данных
+        }
 
-        // Перезапускаем таймер
-        _timer.Change(_flushInterval, Timeout.Infinite);
+        _timer.Change(_flushInterval, Timeout.Infinite); // Перезапуск таймера
+    }
+    
+    private async Task SendEventsAsync(IEnumerable<string> events)
+    {
+        await Task.Delay(100);
+        Console.WriteLine($"Отправлено {events.Count()} событий.");
     }
 }
