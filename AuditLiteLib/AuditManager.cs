@@ -18,16 +18,15 @@ public class AuditManager
         _timer = new Timer(TimerCallback, null, _config.FlushIntervalMilliseconds, Timeout.Infinite);
     }
     
-    public async Task CreateAuditEvent(string eventType, Dictionary<string, object>? optionalFields)
+    public Task CreateAuditEvent(string eventType, Dictionary<string, object>? optionalFields)
     {
         Dictionary<string, string> customAuditFields = ConvertToJsonDictionary(optionalFields);
-        await _buffer.AddEventAsync(new AuditEvent(eventType, customAuditFields));
-
+        return _buffer.AddEventAsync(new AuditEvent(eventType, customAuditFields));
     }
     
     private async Task FlushBuffer()
     {
-        await _buffer.FlushAsync();
+         await _buffer.FlushAsync();
         
         // Здесь должен быть метод отвечающий за отправку полученных событий из метода _buffer.FlushAsync()
         
