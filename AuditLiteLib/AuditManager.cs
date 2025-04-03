@@ -21,7 +21,7 @@ public class AuditManager
     public async Task CreateAuditEvent(string eventType, Dictionary<string, object>? optionalFields)
     {
         Dictionary<string, string> customAuditFields = ConvertToJsonDictionary(optionalFields);
-        await _buffer.AddEventAsync(new AuditEvent(eventType, customAuditFields));
+        //await _buffer.AddEventAsync(new AuditEventExtensions(eventType, customAuditFields));
 
     }
     
@@ -45,26 +45,6 @@ public class AuditManager
         }
         return result;
     } 
-
-    // Это должно быть на сервере
-    private static Dictionary<string, object> ConvertFromJsonDictionary(Dictionary<string, string>? source)
-    {
-        var result = new Dictionary<string, object>();
-        if (source == null) return result;
-
-        foreach (var kvp in source)
-        {
-            try
-            {
-                result[kvp.Key] = JsonSerializer.Deserialize<object>(kvp.Value)!;
-            }
-            catch
-            {
-                result[kvp.Key] = kvp.Value;
-            }
-        }
-        return result;
-    }
     
     // Метод-обертка, для обработки асинхронной операции.
     private void TimerCallback(object? state) 

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using Auditlitelib.Protos;
 
 namespace AuditLiteLib;
 
@@ -15,9 +16,9 @@ public class EventBuffer
         _maxBufferSize = maxBufferSize;
     }
     
-    public async Task AddEventAsync(AuditEvent eventData)
+    public async Task AddEventAsync(AuditEvent eventExtensionsData)
     {
-        _buffer.Enqueue(eventData);
+        _buffer.Enqueue(eventExtensionsData);
 
         if (IsBufferFull())
         {
