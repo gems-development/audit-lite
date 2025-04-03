@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using AuditLiteLib.Configuration;
+using Auditlitelib.Protos;
 
 namespace AuditLiteLib;
 
@@ -8,7 +9,7 @@ public class AuditManager
     private readonly AuditConfig _config;
     private readonly EventBuffer _buffer;
     private readonly Timer _timer;
-    // здесь так же будет поле для serverClient
+    private readonly AuditClient _client;
 
     public AuditManager(AuditConfig config)
     {
@@ -16,20 +17,24 @@ public class AuditManager
         _buffer = new EventBuffer(config.MaxBufferSize);
         // TimerCallback - Метод-обертка. Он предсатвляет собой FlushBuffer().
         _timer = new Timer(TimerCallback, null, _config.FlushIntervalMilliseconds, Timeout.Infinite);
+        _client = new AuditClient(config.ServerUrl);
     }
     
-    public Task CreateAuditEvent(string eventType, Dictionary<string, object>? optionalFields)
+    public async Task CreateAuditEvent(string eventType, Dictionary<string, object>? optionalFields)
     {
         Dictionary<string, string> customAuditFields = ConvertToJsonDictionary(optionalFields);
-        return _buffer.AddEventAsync(new AuditEvent(eventType, customAuditFields));
+        await _buffer.AddEventAsync(new AuditEvent().FillFromDefaults(eventType, customAuditFields));
     }
     
     private async Task FlushBuffer()
     {
-         await _buffer.FlushAsync();
-        
+        List<AuditEvent> auditEvents = await _buffer.FlushAsync();
         // Здесь должен быть метод отвечающий за отправку полученных событий из метода _buffer.FlushAsync()
-        
+        foreach (AuditEvent auditEvent in auditEvents)
+        {
+            bool response = await _client.SendEventAsync(auditEvent);
+            Console.WriteLine(response ? "Отправлено!" : "Ошибка отправки.");
+        }
         _timer.Change(_config.FlushIntervalMilliseconds, Timeout.Infinite); // Перезапуск таймера
     }
     
@@ -44,26 +49,6 @@ public class AuditManager
         }
         return result;
     } 
-
-    // Это должно быть на сервере
-    private static Dictionary<string, object> ConvertFromJsonDictionary(Dictionary<string, string>? source)
-    {
-        var result = new Dictionary<string, object>();
-        if (source == null) return result;
-
-        foreach (var kvp in source)
-        {
-            try
-            {
-                result[kvp.Key] = JsonSerializer.Deserialize<object>(kvp.Value)!;
-            }
-            catch
-            {
-                result[kvp.Key] = kvp.Value;
-            }
-        }
-        return result;
-    }
     
     // Метод-обертка, для обработки асинхронной операции.
     private void TimerCallback(object? state) 

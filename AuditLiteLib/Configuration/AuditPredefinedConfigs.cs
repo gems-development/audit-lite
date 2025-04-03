@@ -6,7 +6,7 @@ public static class AuditPredefinedConfigs
     {
         return new AuditConfigBuilder()
             .SetPredefinedConfigName("Basic")
-            .SetServerUrl("http://localhost:5000/audit")
+            .SetServerUrl("http://localhost:5001/audit")
             .SetFlushIntervalMilliseconds(50000)
             .SetMaxBufferSize(100)
             .SetEnableProtobufSerialization(false)

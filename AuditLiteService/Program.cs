@@ -9,5 +9,6 @@ builder.Services.AddDbContext<AuditDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("PostgresConnection")));
 
 var app = builder.Build();
+app.Urls.Add("http://localhost:5001/audit");
 app.MapGrpcService<AuditLoggerService>();
 app.Run();

@@ -5,7 +5,7 @@ public class AuditConfigBuilder
     private string _predefinedConfigName = string.Empty;
     private long _flushIntervalMilliseconds = 50000;
     private int _maxBufferSize = 100;
-    private string _serverUrl = "http://localhost:5000/audit";
+    private string _serverUrl = "http://localhost:5001/audit";
     private bool _enableProtobufSerialization = true;
     
     public AuditConfigBuilder SetPredefinedConfigName(string name)

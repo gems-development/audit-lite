@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using Auditlitelib.Protos;
 
 namespace AuditLiteLib;
 
