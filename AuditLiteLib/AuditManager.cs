@@ -3,19 +3,21 @@ using AuditLite;
 using AuditLiteLib.Configuration;
 
 namespace AuditLiteLib;
-
-public class AuditManager
+// Посмотреть про IAsyncDisposable
+public class AuditManager : IDisposable
 {
     private readonly AuditConfig _config;
     private readonly EventBuffer _buffer;
     private readonly Timer _timer;
     private readonly AuditClient _client;
     private readonly SemaphoreSlim _semaphore = new(1, 1);
+    private bool _disposed;
+    
     public AuditManager(AuditConfig config)
     {
         _config = config;
         _buffer = new EventBuffer(config.MaxBufferSize);
-        // TimerCallback - Метод-обертка. Он представляет собой FlushBuffer().
+        // TimerCallback - Метод-обертка. Он представляет собой FlushBufferAndSendEventsAsync().
         _timer = new Timer(TimerCallback, null, _config.FlushIntervalMilliseconds, Timeout.Infinite);
         _client = new AuditClient(config.ServerUrl);
     }
@@ -33,6 +35,8 @@ public class AuditManager
             if (_buffer.IsFull())
             {
                 await FlushBufferAndSendEventsAsync();
+                
+                // тут вызать buffrt.FlushAsync
             }
         }
         finally
@@ -45,6 +49,7 @@ public class AuditManager
     private async Task FlushBufferAndSendEventsAsync()
     {
         IReadOnlyCollection<AuditEvent> eventsToSend = await _buffer.FlushAsync();
+            // Вынести foreach
         foreach (var auditEvent in eventsToSend)
         {
             bool response = await _client.SendEventAsync(auditEvent);
@@ -65,10 +70,24 @@ public class AuditManager
             result[kvp.Key] = JsonSerializer.Serialize(kvp.Value);
         }
         return result;
-    } 
+    }
+
+    private Task StopBufferAsync()
+    {
+        return FlushBufferAndSendEventsAsync();
+    }
      
     private void TimerCallback(object? state) 
     {
         FlushBufferAndSendEventsAsync().GetAwaiter().GetResult();
+    }
+    
+    public void Dispose()
+    {
+        if (_disposed) return;
+        FlushBufferAndSendEventsAsync().GetAwaiter().GetResult();
+        _timer.Dispose();
+        _semaphore.Dispose();
+        _disposed = true;
     }
 }

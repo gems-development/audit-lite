@@ -11,6 +11,7 @@ public class EventBuffer(int maxBufferSize)
     private readonly ConcurrentQueue<AuditEvent> _buffer = new();
     private readonly SemaphoreSlim _semaphore = new(1, 1);
 
+    // ToDo Нужно убрать тут семафор.
     public async Task AddEventAsync(AuditEvent eventData)
     {
         await _semaphore.WaitAsync();
@@ -47,6 +48,7 @@ public class EventBuffer(int maxBufferSize)
         }
     }
     
+    // ToDo Пригодится ли этот метод StopBufferAsync()?
     public async Task StopBufferAsync()
     {
          await FlushAsync();
