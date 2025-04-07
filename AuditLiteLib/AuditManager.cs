@@ -2,7 +2,6 @@
 using AuditLite;
 using AuditLiteLib.Configuration;
 
-
 namespace AuditLiteLib;
 
 public class AuditManager
@@ -11,32 +10,49 @@ public class AuditManager
     private readonly EventBuffer _buffer;
     private readonly Timer _timer;
     private readonly AuditClient _client;
-
+    private readonly SemaphoreSlim _semaphore = new(1, 1);
     public AuditManager(AuditConfig config)
     {
         _config = config;
         _buffer = new EventBuffer(config.MaxBufferSize);
-        // TimerCallback - Метод-обертка. Он предсатвляет собой FlushBuffer().
+        // TimerCallback - Метод-обертка. Он представляет собой FlushBuffer().
         _timer = new Timer(TimerCallback, null, _config.FlushIntervalMilliseconds, Timeout.Infinite);
         _client = new AuditClient(config.ServerUrl);
     }
     
     public async Task CreateAuditEvent(string eventType, Dictionary<string, object>? optionalFields)
     {
-        Dictionary<string, string> customAuditFields = ConvertToJsonDictionary(optionalFields);
-        await _buffer.AddEventAsync(new AuditEvent().FillFromDefaults(eventType, customAuditFields));
+        var customAuditFields = ConvertToJsonDictionary(optionalFields);
+        var auditEvent = new AuditEvent().FillFromDefaults(eventType, customAuditFields);
+
+        await _buffer.AddEventAsync(auditEvent);
+
+        await _semaphore.WaitAsync();
+        try
+        {
+            if (_buffer.IsFull())
+            {
+                await FlushBufferAndSendEventsAsync();
+            }
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
     }
-    
-    private async Task FlushBuffer()
+
+    // Todo решить как поступить с двумя действиями в этом методе.
+    private async Task FlushBufferAndSendEventsAsync()
     {
-        List<AuditEvent> auditEvents = await _buffer.FlushAsync();
-        // Здесь должен быть метод отвечающий за отправку полученных событий из метода _buffer.FlushAsync()
-        foreach (AuditEvent auditEvent in auditEvents)
+        IReadOnlyCollection<AuditEvent> eventsToSend = await _buffer.FlushAsync();
+        foreach (var auditEvent in eventsToSend)
         {
             bool response = await _client.SendEventAsync(auditEvent);
             Console.WriteLine(response ? "Отправлено!" : "Ошибка отправки.");
         }
-        _timer.Change(_config.FlushIntervalMilliseconds, Timeout.Infinite); // Перезапуск таймера
+        Console.WriteLine($"Отправлено {eventsToSend.Count} событий.");
+
+        _timer.Change(_config.FlushIntervalMilliseconds, Timeout.Infinite); // Перезапуск таймера        
     }
     
      private static Dictionary<string, string> ConvertToJsonDictionary(Dictionary<string, object>? source)
@@ -50,10 +66,9 @@ public class AuditManager
         }
         return result;
     } 
-    
-    // Метод-обертка, для обработки асинхронной операции.
+     
     private void TimerCallback(object? state) 
     {
-        FlushBuffer().GetAwaiter().GetResult();
+        FlushBufferAndSendEventsAsync().GetAwaiter().GetResult();
     }
 }

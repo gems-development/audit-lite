@@ -9,9 +9,9 @@ internal static class Program
     {
         var auditConfig = new AuditConfigBuilder()
             .SetPredefinedConfigName("test")
-            .SetServerUrl("http://localhost:5000")
-            .SetFlushIntervalMilliseconds(4000)
-            .SetMaxBufferSize(10)
+            .SetServerUrl("http://localhost:5001")
+            .SetFlushIntervalMilliseconds(5000)
+            .SetMaxBufferSize(8)
             .Build();
         
         var eventBuffer = new EventBuffer(
@@ -38,7 +38,7 @@ internal static class Program
         });
         
         Console.WriteLine("Останавливаем буфер...");
-        await eventBuffer.StopAsync();
+        await eventBuffer.StopBufferAsync();
 
         Console.WriteLine("Тестирование завершено.");
     }

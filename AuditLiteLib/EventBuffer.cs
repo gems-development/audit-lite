@@ -1,7 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using AuditLite;
 
-
 namespace AuditLiteLib;
 
 using System;
@@ -11,63 +10,49 @@ public class EventBuffer(int maxBufferSize)
 {
     private readonly ConcurrentQueue<AuditEvent> _buffer = new();
     private readonly SemaphoreSlim _semaphore = new(1, 1);
-    
-    public async Task AddEventAsync(AuditEvent eventData)
-    {
-        try
-        {
-            _buffer.Enqueue(eventData);
 
-            if (IsBufferFull())
-            {
-                await Task.Delay(1000);
-                await FlushAsync();
-            }
-        }
-        catch (Exception e)
-        {
-            await Console.Error.WriteLineAsync($"Ошибка при добавлении события в буфер: {e.Message}");
-            throw;
-        }
-    }
-    
-    public async Task<List<AuditEvent>> FlushAsync()
+    public async Task AddEventAsync(AuditEvent eventData)
     {
         await _semaphore.WaitAsync();
         try
         {
-            if (_buffer.IsEmpty)
-            {
-                return new List<AuditEvent>(); // Если буфер пуст, возвращаем пустой лист
-            }
-
+            _buffer.Enqueue(eventData);
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
+    }
+    
+    public async Task<IReadOnlyCollection<AuditEvent>> FlushAsync()
+    {
+        await _semaphore.WaitAsync();
+        try
+        {
             var eventsToFlush = new List<AuditEvent>(_buffer.Count);
             while (_buffer.TryDequeue(out var eventData))
             {
                 eventsToFlush.Add(eventData);
             }
-
-            Console.WriteLine($"Отправлено {eventsToFlush.Count} событий.");
-
             return eventsToFlush;
         }
         catch (Exception e)
         {
-            await Console.Error.WriteLineAsync($"Ошибка при очистке буфера: {e.Message}");
+            await Console.Error.WriteLineAsync($"Ошибка при извлечении сообщений из буфера: {e.Message}");
             throw;
         }
         finally
         {
-            _semaphore.Release(); // Освобождаем семафор
+            _semaphore.Release();
         }
     }
     
-    public async Task StopAsync()
+    public async Task StopBufferAsync()
     {
          await FlushAsync();
     }
     
-    private bool IsBufferFull()
+    public bool IsFull()
     {
         return _buffer.Count >= maxBufferSize;
     }
