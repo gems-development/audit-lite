@@ -1,4 +1,6 @@
-﻿using Auditlitelib.Protos;
+﻿
+using AuditLite;
+using Grpc.Core;
 using Grpc.Net.Client;
 
 namespace AuditLiteLib;
@@ -9,7 +11,10 @@ public class AuditClient
 
     public AuditClient(string serverAddress)
     {
-        var channel = GrpcChannel.ForAddress(serverAddress);
+        var channel = GrpcChannel.ForAddress(serverAddress, new GrpcChannelOptions
+        {
+            Credentials = ChannelCredentials.Insecure
+        });
         _client = new AuditLogger.AuditLoggerClient(channel);
     }
 

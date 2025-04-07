@@ -1,4 +1,5 @@
-﻿using AuditLiteService.Data;
+﻿using AuditLite;
+using AuditLiteService.Data;
 using AuditLiteService.Models;
 using Grpc.Core;
 
@@ -12,7 +13,7 @@ public class AuditLoggerService : AuditLogger.AuditLoggerBase
     {
         _context = context;
     }
-
+     
     public override async Task<AuditResponse> LogEvent(AuditEvent request, ServerCallContext context)
     {
         try

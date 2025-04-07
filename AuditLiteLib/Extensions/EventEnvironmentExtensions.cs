@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
-using Auditlitelib.Protos;
+using AuditLite;
 
 
 namespace AuditLiteLib;
