@@ -19,7 +19,7 @@ internal static class Program
             maxBufferSize: auditConfig.MaxBufferSize
         );
         
-        using var auditManager = new AuditManager(auditConfig); // ToDo Добавил using, тк реализовал в auditManager паттерн IDisposable
+        await using var auditManager = new AuditManager(auditConfig); // ToDo Добавил using, тк реализовал в auditManager паттерн IDisposable
 
         Console.WriteLine("Начало теста...");
             

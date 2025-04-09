@@ -3,8 +3,7 @@ using AuditLite;
 using AuditLiteLib.Configuration;
 
 namespace AuditLiteLib;
-// Посмотреть про IAsyncDisposable
-public class AuditManager : IDisposable
+public class AuditManager : IDisposable, IAsyncDisposable
 {
     private readonly AuditConfig _config;
     private readonly EventBuffer _buffer;
@@ -35,8 +34,6 @@ public class AuditManager : IDisposable
             if (_buffer.IsFull())
             {
                 await FlushBufferAndSendEventsAsync();
-                
-                // тут вызать buffrt.FlushAsync
             }
         }
         finally
@@ -49,7 +46,7 @@ public class AuditManager : IDisposable
     private async Task FlushBufferAndSendEventsAsync()
     {
         IReadOnlyCollection<AuditEvent> eventsToSend = await _buffer.FlushAsync();
-            // Вынести foreach
+            // Вынести foreach в отдельный метод, чтобы решить вопрос с именованием текущего метода
         foreach (var auditEvent in eventsToSend)
         {
             bool response = await _client.SendEventAsync(auditEvent);
@@ -81,13 +78,79 @@ public class AuditManager : IDisposable
     {
         FlushBufferAndSendEventsAsync().GetAwaiter().GetResult();
     }
-    
-    public void Dispose()
+
+	//ToDo Выбрать реализацию для шаблона освобождения
+
+	/*public void Dispose()
     {
         if (_disposed) return;
-        FlushBufferAndSendEventsAsync().GetAwaiter().GetResult();
+        DisposeAsync().GetAwaiter().GetResult();
+        _disposed = true;
+        GC.SuppressFinalize(this);
+    }*/
+
+	/*public async ValueTask DisposeAsync()
+    {
+        if (_disposed) return;
+        await FlushBufferAndSendEventsAsync();
         _timer.Dispose();
         _semaphore.Dispose();
         _disposed = true;
+        GC.SuppressFinalize(this);
+    }*/
+
+	// Реализация IDisposable
+	public void Dispose()
+    {
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (!_disposed)
+        {
+            if (disposing)
+            {
+                StopBufferAsync().GetAwaiter().GetResult();
+                _timer.Dispose();
+                _semaphore.Dispose();
+
+                // Todo Если AuditClient будет реализовывать IDisposable
+                //if (_client is IDisposable disposableClient)
+                //{
+                //    disposableClient.Dispose();
+                //}
+            }
+
+            _disposed = true;
+        }
+    }
+
+    // Реализация IAsyncDisposable
+    public async ValueTask DisposeAsync()
+    {
+        await DisposeAsyncCore().ConfigureAwait(false);
+
+        Dispose(disposing: false);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual async ValueTask DisposeAsyncCore()
+    {
+        if (!_disposed)
+        {
+            await StopBufferAsync().ConfigureAwait(false);
+            await _timer.DisposeAsync().ConfigureAwait(false);
+            _semaphore.Dispose();
+
+            // Todo Если AuditClient будет реализовывать IDisposable
+            //if (_client is IAsyncDisposable asyncClient)
+            //{
+            //    await asyncClient.DisposeAsync().ConfigureAwait(false);
+            //}
+
+            _disposed = true;
+        }
     }
 }
