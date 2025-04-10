@@ -1,4 +1,5 @@
-﻿using AuditLiteLib;
+﻿using AuditLite;
+using AuditLiteLib;
 using AuditLiteLib.Configuration;
 
 namespace AuditLiteConsoleApp;
@@ -10,15 +11,15 @@ internal static class Program
         var auditConfig = new AuditConfigBuilder()
             .SetPredefinedConfigName("test")
             .SetServerUrl("http://localhost:5001")
-            .SetFlushIntervalMilliseconds(5000)
-            .SetMaxBufferSize(8)
+            .SetFlushIntervalMilliseconds(10000)
+            .SetMaxBufferSize(16)
             .Build();
         
         var eventBuffer = new EventBuffer(
             maxBufferSize: auditConfig.MaxBufferSize
         );
         
-        var auditManager = new AuditManager(auditConfig);
+        await using var auditManager = new AuditManager(auditConfig); // ToDo Добавил using, тк реализовал в auditManager паттерн IDisposable
 
         Console.WriteLine("Начало теста...");
             
@@ -27,18 +28,20 @@ internal static class Program
         {
             var eventData = new Dictionary<string, object>
             {
-                { "Key1", $"Value{i}" },
-                { "Key2", i }
+                { "field_1", $"Type - {i}" },
+                { "field_2", $"Name - {i}" }
             };
+            
             var threadId = Thread.CurrentThread.ManagedThreadId;
             Console.WriteLine($"[Поток {threadId}] Добавлено: {eventData}");
+            
             await auditManager.CreateAuditEvent("testType", eventData);
             
             await Task.Delay(3000, cancellationToken);
         });
         
-        Console.WriteLine("Останавливаем буфер...");
-        await eventBuffer.StopBufferAsync();
+        //Console.WriteLine("Останавливаем буфер...");
+        //await auditManager.StopBufferAsync();
 
         Console.WriteLine("Тестирование завершено.");
     }
