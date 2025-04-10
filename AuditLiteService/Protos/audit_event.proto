@@ -19,10 +19,13 @@ message AuditEvent {
   map<string, string> custom_fields = 4;
 }
 
-service AuditLogger {
-  rpc LogEvent (AuditEvent) returns (AuditResponse);
+message AuditEventList {
+  repeated AuditEvent audit_events = 1;
 }
 
+service AuditLogger {
+  rpc LogEvent (AuditEventList) returns (AuditResponse);
+}
 message AuditResponse {
   bool success = 1;
   string message = 2;

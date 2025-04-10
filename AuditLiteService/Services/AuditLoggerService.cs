@@ -1,6 +1,6 @@
 ﻿using AuditLite;
 using AuditLiteService.Data;
-using AuditLiteService.Models;
+using AuditLiteService.Extensions;
 using Grpc.Core;
 
 namespace AuditLiteService.Services;
@@ -14,29 +14,14 @@ public class AuditLoggerService : AuditLogger.AuditLoggerBase
         _context = context;
     }
      
-    public override async Task<AuditResponse> LogEvent(AuditEvent request, ServerCallContext context)
+    public override async Task<AuditResponse> LogEvent(AuditEventList request, ServerCallContext context)
     {
         try
         {
-            var auditEvent = new AuditEventEntity()
-            {
-                EventType = request.EventType,
-                EventDate = request.EventDate.ToDateTime(),
-                EventEnvironmentEntity = new EventEnvironmentEntity
-                {
-                    UserName = request.EventEnvironment.UserName,
-                    MethodName = request.EventEnvironment.MethodName,
-                    MachineName = request.EventEnvironment.MachineName,
-                    IpAddress = request.EventEnvironment.IpAddress
-                },
-                CustomFields = request.CustomFields
-                    .Select(kvp => new CustomFieldEntity { Key = kvp.Key, Value = kvp.Value })
-                    .ToList()
-            };
-
-            _context.AuditEvents.Add(auditEvent);
+            var entities = request.AuditEvents.Select(auditEvent => auditEvent.ToEntity()).ToList();
+            _context.AuditEvents.AddRange(entities);
             await _context.SaveChangesAsync();
-
+    
             return new AuditResponse { Success = true, Message = "Событие успешно записано в базу данных" };
         }
         catch (Exception ex)
