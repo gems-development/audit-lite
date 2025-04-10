@@ -45,12 +45,10 @@ public class AuditManager
     private async Task FlushBufferAndSendEventsAsync()
     {
         IReadOnlyCollection<AuditEvent> eventsToSend = await _buffer.FlushAsync();
-        foreach (var auditEvent in eventsToSend)
-        {
-            bool response = await _client.SendEventAsync(auditEvent);
-            Console.WriteLine(response ? "Отправлено!" : "Ошибка отправки.");
-        }
-        Console.WriteLine($"Отправлено {eventsToSend.Count} событий.");
+        AuditEventList auditEventList = eventsToSend.ToAuditEventList();
+        bool response = await _client.SendEventAsync(auditEventList);
+        //Console.WriteLine(response ? "Отправлено!" : "Ошибка отправки.");
+        //Console.WriteLine($"Отправлено {auditEventList.AuditEvents.Count()} событий.");
 
         _timer.Change(_config.FlushIntervalMilliseconds, Timeout.Infinite); // Перезапуск таймера        
     }

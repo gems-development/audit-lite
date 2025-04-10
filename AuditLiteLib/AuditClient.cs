@@ -18,7 +18,7 @@ public class AuditClient
         _client = new AuditLogger.AuditLoggerClient(channel);
     }
 
-    public async Task<bool> SendEventAsync(AuditEvent auditEvent)
+    public async Task<bool> SendEventAsync(AuditEventList auditEvent)
     {
         var response = await _client.LogEventAsync(auditEvent);
         return response.Success;
