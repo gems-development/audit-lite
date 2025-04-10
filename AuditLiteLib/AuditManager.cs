@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using AuditLite;
 using AuditLiteLib.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace AuditLiteLib;
 public class AuditManager : IDisposable, IAsyncDisposable
@@ -10,11 +11,12 @@ public class AuditManager : IDisposable, IAsyncDisposable
     private readonly Timer _timer;
     private readonly AuditClient _client;
     private readonly SemaphoreSlim _semaphore = new(1, 1);
-    private bool _disposed;
+    private readonly ILogger<AuditManager> _logger;
     
-    public AuditManager(AuditConfig config)
+    public AuditManager(AuditConfig config, ILogger<AuditManager> logger)
     {
         _config = config;
+        _logger = logger;
         _buffer = new EventBuffer(config.MaxBufferSize);
         // TimerCallback - Метод-обертка. Он представляет собой FlushBufferAndSendEventsAsync().
         _timer = new Timer(TimerCallback, null, _config.FlushIntervalMilliseconds, Timeout.Infinite);
@@ -33,7 +35,7 @@ public class AuditManager : IDisposable, IAsyncDisposable
         {
             if (_buffer.IsFull())
             {
-                await FlushBufferAndSendEventsAsync();
+                await FlushBufferedEventsAsync();
             }
         }
         finally
@@ -41,17 +43,39 @@ public class AuditManager : IDisposable, IAsyncDisposable
             _semaphore.Release();
         }
     }
-
-    // Todo решить как поступить с двумя действиями в этом методе.
-    private async Task FlushBufferAndSendEventsAsync()
+    
+    private async Task FlushBufferedEventsAsync() // ToDo что все таки с названием? Может быть уместно оставить FlushBufferAndSendEventsAsync()?
     {
-        IReadOnlyCollection<AuditEvent> eventsToSend = await _buffer.FlushAsync();
-        AuditEventList auditEventList = eventsToSend.ToAuditEventList();
-        bool response = await _client.SendEventAsync(auditEventList);
-        //Console.WriteLine(response ? "Отправлено!" : "Ошибка отправки.");
-        //Console.WriteLine($"Отправлено {auditEventList.AuditEvents.Count()} событий.");
+        var eventsToSend = await ExtractEventsFromBufferAsync();
+            
+        RestartFlushTimer();
 
-        _timer.Change(_config.FlushIntervalMilliseconds, Timeout.Infinite); // Перезапуск таймера        
+        await SendEventsAsync(eventsToSend);
+    }
+    
+    private async Task<IReadOnlyCollection<AuditEvent>> ExtractEventsFromBufferAsync()
+    {
+        return await _buffer.FlushAsync();
+    }
+    
+    private void RestartFlushTimer()
+    {
+        _timer.Change(_config.FlushIntervalMilliseconds, Timeout.Infinite);
+    }
+    
+    private async Task SendEventsAsync(IReadOnlyCollection<AuditEvent> eventsToSend)
+    {
+        var auditEventList = eventsToSend.ToAuditEventList();
+        bool success = await _client.SendEventAsync(auditEventList); // исправить тип
+
+        if (success)
+        {
+            _logger.LogInformation("Успешно отправлено {Count} событий.", auditEventList.AuditEvents.Count);
+        }
+        else
+        {
+            _logger.LogWarning("Ошибка при отправке {Count} событий.", auditEventList.AuditEvents.Count);
+        }
     }
     
      private static Dictionary<string, string> ConvertToJsonDictionary(Dictionary<string, object>? source)
@@ -66,88 +90,48 @@ public class AuditManager : IDisposable, IAsyncDisposable
         return result;
     }
 
-    private Task StopBufferAsync()
+    private async Task StopBufferAsync()
     {
-        return FlushBufferAndSendEventsAsync();
+        await FlushBufferedEventsAsync();
+        
+        // Если нужно удалять ссылку на буфер, можно сделать это здесь
     }
      
     private void TimerCallback(object? state) 
     {
-        FlushBufferAndSendEventsAsync().GetAwaiter().GetResult();
+        FlushBufferedEventsAsync().GetAwaiter().GetResult();
     }
-
-	//ToDo Выбрать реализацию для шаблона освобождения
-
-	/*public void Dispose()
-    {
-        if (_disposed) return;
-        DisposeAsync().GetAwaiter().GetResult();
-        _disposed = true;
-        GC.SuppressFinalize(this);
-    }*/
-
-	/*public async ValueTask DisposeAsync()
-    {
-        if (_disposed) return;
-        await FlushBufferAndSendEventsAsync();
-        _timer.Dispose();
-        _semaphore.Dispose();
-        _disposed = true;
-        GC.SuppressFinalize(this);
-    }*/
-
-	// Реализация IDisposable
+    
 	public void Dispose()
     {
-        Dispose(disposing: true);
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+    
+    public async ValueTask DisposeAsync()
+    {
+        await DisposeAsyncCore().ConfigureAwait(false);
+
+        Dispose(false);
         GC.SuppressFinalize(this);
     }
 
     protected virtual void Dispose(bool disposing)
     {
-        if (!_disposed)
-        {
-            if (disposing)
-            {
-                StopBufferAsync().GetAwaiter().GetResult();
-                _timer.Dispose();
-                _semaphore.Dispose();
-
-                // Todo Если AuditClient будет реализовывать IDisposable
-                //if (_client is IDisposable disposableClient)
-                //{
-                //    disposableClient.Dispose();
-                //}
-            }
-
-            _disposed = true;
-        }
-    }
-
-    // Реализация IAsyncDisposable
-    public async ValueTask DisposeAsync()
-    {
-        await DisposeAsyncCore().ConfigureAwait(false);
-
-        Dispose(disposing: false);
-        GC.SuppressFinalize(this);
+        if (!disposing) return;
+        StopBufferAsync().GetAwaiter().GetResult();
+        _timer.Dispose();
+        _semaphore.Dispose();
+                
+        // _timer = null; // Не могу выполнить, тк таймер ReadOnly.
+        // Нужно ли как-либо обработать буфер?
+        // Избавиться ли от StopBufferAsync() в пользу FlushBufferAndSendEventsAsync()? 
     }
 
     protected virtual async ValueTask DisposeAsyncCore()
     {
-        if (!_disposed)
-        {
-            await StopBufferAsync().ConfigureAwait(false);
-            await _timer.DisposeAsync().ConfigureAwait(false);
-            _semaphore.Dispose();
-
-            // Todo Если AuditClient будет реализовывать IDisposable
-            //if (_client is IAsyncDisposable asyncClient)
-            //{
-            //    await asyncClient.DisposeAsync().ConfigureAwait(false);
-            //}
-
-            _disposed = true;
-        }
+        await StopBufferAsync().ConfigureAwait(false);
+        await _timer.DisposeAsync().ConfigureAwait(false);
+        _semaphore.Dispose();
     }
 }

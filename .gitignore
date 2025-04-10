@@ -67,4 +67,3 @@ nunit-*.xml
 *.user
 *.userosscache
 *.sln.docstates
-/AuditLiteService/Migrations

@@ -1,6 +1,6 @@
-﻿using AuditLite;
-using AuditLiteLib;
+﻿using AuditLiteLib;
 using AuditLiteLib.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace AuditLiteConsoleApp;
 
@@ -14,12 +14,15 @@ internal static class Program
             .SetFlushIntervalMilliseconds(10000)
             .SetMaxBufferSize(16)
             .Build();
+
+        var logger = LoggerFactory.Create(builder => builder.AddConsole())
+            .CreateLogger<AuditManager>();
         
         var eventBuffer = new EventBuffer(
             maxBufferSize: auditConfig.MaxBufferSize
         );
         
-        await using var auditManager = new AuditManager(auditConfig); // ToDo Добавил using, тк реализовал в auditManager паттерн IDisposable
+        await using var auditManager = new AuditManager(auditConfig, logger); // Добавил using, тк реализовал в auditManager паттерн IDisposable
 
         Console.WriteLine("Начало теста...");
             
@@ -39,9 +42,6 @@ internal static class Program
             
             await Task.Delay(3000, cancellationToken);
         });
-        
-        //Console.WriteLine("Останавливаем буфер...");
-        //await auditManager.StopBufferAsync();
 
         Console.WriteLine("Тестирование завершено.");
     }
