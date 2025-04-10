@@ -35,7 +35,23 @@ public static class EventEnvironmentExtensions
     private static string GetCallerMethodName()
     {
         var stackTrace = new StackTrace();
-        return stackTrace.GetFrame(2)?.GetMethod()?.Name ?? "Unknown";
+
+        foreach (var frame in stackTrace.GetFrames() ?? [])
+        {
+            var method = frame.GetMethod();
+            var declaringType = method?.DeclaringType;
+            
+            if (declaringType == null) continue;
+
+            var ns = declaringType.Namespace;
+            if (ns != null && ns.StartsWith("AuditLiteLib")) continue;
+            
+            if (ns != null && ns.StartsWith("System")) continue;
+
+            return $"{declaringType.FullName}.{method?.Name}";
+        }
+
+        return "Unknown";
     }
     
 }
