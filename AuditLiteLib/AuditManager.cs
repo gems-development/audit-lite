@@ -23,12 +23,12 @@ public class AuditManager : IDisposable, IAsyncDisposable
         _client = new AuditClient(config.ServerUrl);
     }
     
-    public async Task CreateAuditEvent(string eventType, Dictionary<string, object>? optionalFields)
+    public async Task CreateAuditEventAsync(string eventType, Dictionary<string, object>? optionalFields)
     {
         var customAuditFields = ConvertToJsonDictionary(optionalFields);
         var auditEvent = new AuditEvent().FillFromDefaults(eventType, customAuditFields);
 
-        await _buffer.AddEventAsync(auditEvent);
+        _buffer.AddEvent(auditEvent);
 
         await _semaphore.WaitAsync();
         try
@@ -46,9 +46,9 @@ public class AuditManager : IDisposable, IAsyncDisposable
     
     private async Task FlushBufferedEventsAsync() // ToDo что все таки с названием? Может быть уместно оставить FlushBufferAndSendEventsAsync()?
     {
-        var eventsToSend = await ExtractEventsFromBufferAsync();
-            
-        RestartFlushTimer();
+		var eventsToSend = await ExtractEventsFromBufferAsync();
+
+		RestartFlushTimer();
 
         await SendEventsAsync(eventsToSend);
     }
@@ -66,15 +66,15 @@ public class AuditManager : IDisposable, IAsyncDisposable
     private async Task SendEventsAsync(IReadOnlyCollection<AuditEvent> eventsToSend)
     {
         var auditEventList = eventsToSend.ToAuditEventList();
-        bool success = await _client.SendEventAsync(auditEventList); // исправить тип
+        bool success = await _client.SendEventAsync(auditEventList);
 
         if (success)
         {
-            _logger.LogInformation("Успешно отправлено {Count} событий.", auditEventList.AuditEvents.Count);
+            _logger.LogInformation("Successfully sent {Count} events", auditEventList.AuditEvents.Count);
         }
         else
         {
-            _logger.LogWarning("Ошибка при отправке {Count} событий.", auditEventList.AuditEvents.Count);
+            _logger.LogWarning("Error sending {Count} events.", auditEventList.AuditEvents.Count);
         }
     }
     
@@ -97,10 +97,20 @@ public class AuditManager : IDisposable, IAsyncDisposable
         // Если нужно удалять ссылку на буфер, можно сделать это здесь
     }
      
-    private void TimerCallback(object? state) 
+    private async void TimerCallback(object? state) 
     {
-        FlushBufferedEventsAsync().GetAwaiter().GetResult();
-    }
+		// ToDo Стоит ли вынести эту проверку в FlushBufferedEventsAsync(), либо продублировать ее в Dispose().
+        // Тк при вызове Dispose(), в конце выполнения, может также отправиться пустой спсиок. Не то чтобы это большая проблема, но стоит обсудить.
+
+		if (_buffer.IsEmpty()) 
+		{
+			_logger.LogInformation("Buffer is empty. Flushing skipped");
+			RestartFlushTimer();
+			return;
+		}
+
+        await FlushBufferedEventsAsync();
+	}
     
 	public void Dispose()
     {

@@ -25,7 +25,7 @@ internal static class Program
         await using var auditManager = new AuditManager(auditConfig, logger); // Добавил using, тк реализовал в auditManager паттерн IDisposable
 
         Console.WriteLine("Начало теста...");
-            
+
             // Эмуляция многопоточности.
             await Parallel.ForEachAsync(Enumerable.Range(1, 30), async (i, cancellationToken) =>
         {
@@ -38,7 +38,7 @@ internal static class Program
             var threadId = Thread.CurrentThread.ManagedThreadId;
             Console.WriteLine($"[Поток {threadId}] Добавлено: {eventData}");
             
-            await auditManager.CreateAuditEvent("testType", eventData);
+            await auditManager.CreateAuditEventAsync("testType", eventData);
             
             await Task.Delay(3000, cancellationToken);
         });
