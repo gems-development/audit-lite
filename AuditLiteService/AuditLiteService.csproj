@@ -33,5 +33,8 @@
         <!-- Укажите путь к вашему .proto файлу -->
         <Protobuf Include="Protos\audit_event.proto" GrpcServices="Server" />
     </ItemGroup>
+    <ItemGroup>
+      <Folder Include="Migrations\" />
+    </ItemGroup>
 
 </Project>
