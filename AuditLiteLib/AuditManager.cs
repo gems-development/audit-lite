@@ -89,9 +89,20 @@ public class AuditManager : IDisposable, IAsyncDisposable
         return result;
     }
      
-    private void TimerCallback(object? state) 
+    private async void TimerCallback(object? state) 
     {
-		PushEventsToSenderAsync().GetAwaiter().GetResult();
+		// ToDo Стоит ли вынести эту проверку в FlushBufferedEventsAsync(), либо продублировать ее в Dispose().
+		// Тк при вызове Dispose(), в конце выполнения, может также отправиться пустой спсиок. Не то чтобы это большая проблема, но стоит обсудить.
+
+		if (_buffer.IsEmpty())
+		{
+			_logger.LogInformation("Buffer is empty. Flushing skipped");
+			RestartFlushTimer();
+			return;
+		}
+
+		await PushEventsToSenderAsync();
+
     }
     
 	public void Dispose()
