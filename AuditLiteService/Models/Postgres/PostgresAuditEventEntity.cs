@@ -2,10 +2,10 @@
 
 namespace AuditLiteService.Models;
 
-public class AuditEventEntity
+public class PostgresAuditEventEntity
 {
     [Key]
-    public int Id { get; set; }  // Первичный ключ
+    public int Id { get; set; }
 
     [Required]
     public string EventType { get; set; } = null!;
@@ -14,7 +14,7 @@ public class AuditEventEntity
     public DateTime EventDate { get; set; }
     
     public int EventEnvironmentId { get; set; }
-    public EventEnvironmentEntity EventEnvironmentEntity { get; set; } = null!;
+    public PostgresEventEnvironmentEntity PostgresEventEnvironmentEntity { get; set; } = null!;
     
-    public List<CustomFieldEntity> CustomFields { get; set; } = new();
+    public List<PostgresCustomFieldEntity> CustomFields { get; set; } = new();
 }

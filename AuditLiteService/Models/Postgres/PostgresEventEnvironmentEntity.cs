@@ -2,7 +2,7 @@
 
 namespace AuditLiteService.Models;
 
-public class EventEnvironmentEntity
+public class PostgresEventEnvironmentEntity
 {
     [Key]
     public int Id { get; set; }

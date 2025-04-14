@@ -2,7 +2,7 @@
 
 namespace AuditLiteService.Models;
 
-public class CustomFieldEntity
+public class PostgresCustomFieldEntity
 {
     [Key]
     public int Id { get; set; }
@@ -14,6 +14,6 @@ public class CustomFieldEntity
     public string Value { get; set; } = null!;
     
     public int AuditEventId { get; set; }
-    public AuditEventEntity AuditEventEntity { get; set; } = null!;
+    public PostgresAuditEventEntity PostgresAuditEventEntity { get; set; } = null!;
 
 }

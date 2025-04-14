@@ -5,20 +5,20 @@ namespace AuditLiteService.Data;
 
 public class AuditDbContext(DbContextOptions<AuditDbContext> options) : DbContext(options)
 {
-    public DbSet<AuditEventEntity> AuditEvents { get; set; }
-    public DbSet<EventEnvironmentEntity> EventEnvironments { get; set; }
-    public DbSet<CustomFieldEntity> CustomFields { get; set; }
+    public DbSet<PostgresAuditEventEntity> AuditEvents { get; set; }
+    public DbSet<PostgresEventEnvironmentEntity> EventEnvironments { get; set; }
+    public DbSet<PostgresCustomFieldEntity> CustomFields { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<AuditEventEntity>()
-            .HasOne(a => a.EventEnvironmentEntity)
+        modelBuilder.Entity<PostgresAuditEventEntity>()
+            .HasOne(a => a.PostgresEventEnvironmentEntity)
             .WithMany()
             .HasForeignKey("EventEnvironmentId")
             .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<CustomFieldEntity>()
-            .HasOne(cf => cf.AuditEventEntity)
+        modelBuilder.Entity<PostgresCustomFieldEntity>()
+            .HasOne(cf => cf.PostgresAuditEventEntity)
             .WithMany(a => a.CustomFields)
             .HasForeignKey("AuditEventId")
             .OnDelete(DeleteBehavior.Cascade);
