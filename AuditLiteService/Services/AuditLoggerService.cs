@@ -19,7 +19,6 @@ public class AuditLoggerService : AuditLogger.AuditLoggerBase
         try
         {
             await _repository.SaveAsync(request);
-    
             return new AuditResponse { Success = true, Message = $"События успешно сохранены в базу данных. " +
                                                                  $"Кол-во событий:{request.AuditEvents.Count()}" };
         }
