@@ -18,7 +18,6 @@ public class AuditManager : IDisposable, IAsyncDisposable
         _config = config;
         _logger = logger;
         _buffer = new EventBuffer(config.MaxBufferSize);
-        // TimerCallback - Метод-обертка. Он представляет собой FlushBufferAndSendEventsAsync().
         _timer = new Timer(TimerCallback, null, _config.FlushIntervalMilliseconds, Timeout.Infinite);
         _client = new AuditClient(config.ServerUrl);
     }
@@ -35,7 +34,7 @@ public class AuditManager : IDisposable, IAsyncDisposable
         {
             if (_buffer.IsFull())
             {
-                await FlushBufferedEventsAsync();
+                await PushEventsToSenderAsync();
             }
         }
         finally
@@ -44,18 +43,18 @@ public class AuditManager : IDisposable, IAsyncDisposable
         }
     }
     
-    private async Task FlushBufferedEventsAsync() // ToDo что все таки с названием? Может быть уместно оставить FlushBufferAndSendEventsAsync()?
-    {
-		var eventsToSend = await ExtractEventsFromBufferAsync();
-
-		RestartFlushTimer();
+    private async Task PushEventsToSenderAsync()
+	{
+        var eventsToSend = await ExtractEventsFromBufferAsync();
+            
+        RestartFlushTimer();
 
         await SendEventsAsync(eventsToSend);
     }
     
-    private async Task<IReadOnlyCollection<AuditEvent>> ExtractEventsFromBufferAsync()
+    private Task<IReadOnlyCollection<AuditEvent>> ExtractEventsFromBufferAsync()
     {
-        return await _buffer.FlushAsync();
+        return _buffer.FlushAsync();
     }
     
     private void RestartFlushTimer()
@@ -89,28 +88,22 @@ public class AuditManager : IDisposable, IAsyncDisposable
         }
         return result;
     }
-
-    private async Task StopBufferAsync()
-    {
-        await FlushBufferedEventsAsync();
-        
-        // Если нужно удалять ссылку на буфер, можно сделать это здесь
-    }
      
     private async void TimerCallback(object? state) 
     {
 		// ToDo Стоит ли вынести эту проверку в FlushBufferedEventsAsync(), либо продублировать ее в Dispose().
-        // Тк при вызове Dispose(), в конце выполнения, может также отправиться пустой спсиок. Не то чтобы это большая проблема, но стоит обсудить.
+		// Тк при вызове Dispose(), в конце выполнения, может также отправиться пустой спсиок. Не то чтобы это большая проблема, но стоит обсудить.
 
-		if (_buffer.IsEmpty()) 
+		if (_buffer.IsEmpty())
 		{
 			_logger.LogInformation("Buffer is empty. Flushing skipped");
 			RestartFlushTimer();
 			return;
 		}
 
-        await FlushBufferedEventsAsync();
-	}
+		await PushEventsToSenderAsync();
+
+    }
     
 	public void Dispose()
     {
@@ -129,19 +122,15 @@ public class AuditManager : IDisposable, IAsyncDisposable
     protected virtual void Dispose(bool disposing)
     {
         if (!disposing) return;
-        StopBufferAsync().GetAwaiter().GetResult();
+		PushEventsToSenderAsync().GetAwaiter().GetResult();
         _timer.Dispose();
         _semaphore.Dispose();
-                
-        // _timer = null; // Не могу выполнить, тк таймер ReadOnly.
-        // Нужно ли как-либо обработать буфер?
-        // Избавиться ли от StopBufferAsync() в пользу FlushBufferAndSendEventsAsync()? 
     }
 
     protected virtual async ValueTask DisposeAsyncCore()
     {
-        await StopBufferAsync().ConfigureAwait(false);
-        await _timer.DisposeAsync().ConfigureAwait(false);
+        await PushEventsToSenderAsync().ConfigureAwait(false);
+		await _timer.DisposeAsync().ConfigureAwait(false);
         _semaphore.Dispose();
     }
 }
