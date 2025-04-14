@@ -11,21 +11,12 @@ public class EventBuffer(int maxBufferSize)
     private readonly ConcurrentQueue<AuditEvent> _buffer = new();
     private readonly SemaphoreSlim _semaphore = new(1, 1);
 
-    // ToDo Нужно убрать тут семафор.
-    public async Task AddEventAsync(AuditEvent eventData)
-    {
-        await _semaphore.WaitAsync();
-        try
-        {
-            _buffer.Enqueue(eventData);
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
-    }
-    
-    public async Task<IReadOnlyCollection<AuditEvent>> FlushAsync()
+	public void AddEvent(AuditEvent eventData)
+	{
+		_buffer.Enqueue(eventData);
+	}
+
+	public async Task<IReadOnlyCollection<AuditEvent>> FlushAsync()
     {
         await _semaphore.WaitAsync();
         try
@@ -39,7 +30,7 @@ public class EventBuffer(int maxBufferSize)
         }
         catch (Exception e)
         {
-            await Console.Error.WriteLineAsync($"Ошибка при извлечении сообщений из буфера: {e.Message}");
+            await Console.Error.WriteLineAsync($"Error extract messages from buffer: {e.Message}");
             throw;
         }
         finally
@@ -47,15 +38,14 @@ public class EventBuffer(int maxBufferSize)
             _semaphore.Release();
         }
     }
-    
-    // ToDo Пригодится ли этот метод StopBufferAsync()?
-    public async Task StopBufferAsync()
-    {
-         await FlushAsync();
-    }
-    
+   
     public bool IsFull()
     {
         return _buffer.Count >= maxBufferSize;
     }
+
+	public bool IsEmpty()
+	{
+        return _buffer.IsEmpty;
+	}
 }

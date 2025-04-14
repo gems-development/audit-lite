@@ -22,12 +22,12 @@ public class AuditManager : IDisposable, IAsyncDisposable
         _client = new AuditClient(config.ServerUrl);
     }
     
-    public async Task CreateAuditEvent(string eventType, Dictionary<string, object>? optionalFields)
+    public async Task CreateAuditEventAsync(string eventType, Dictionary<string, object>? optionalFields)
     {
         var customAuditFields = ConvertToJsonDictionary(optionalFields);
         var auditEvent = new AuditEvent().FillFromDefaults(eventType, customAuditFields);
 
-        await _buffer.AddEventAsync(auditEvent);
+        _buffer.AddEvent(auditEvent);
 
         await _semaphore.WaitAsync();
         try
@@ -65,15 +65,15 @@ public class AuditManager : IDisposable, IAsyncDisposable
     private async Task SendEventsAsync(IReadOnlyCollection<AuditEvent> eventsToSend)
     {
         var auditEventList = eventsToSend.ToAuditEventList();
-        bool success = await _client.SendEventAsync(auditEventList); // исправить тип
+        bool success = await _client.SendEventAsync(auditEventList);
 
         if (success)
         {
-            _logger.LogInformation("Успешно отправлено {Count} событий.", auditEventList.AuditEvents.Count);
+            _logger.LogInformation("Successfully sent {Count} events", auditEventList.AuditEvents.Count);
         }
         else
         {
-            _logger.LogWarning("Ошибка при отправке {Count} событий.", auditEventList.AuditEvents.Count);
+            _logger.LogWarning("Error sending {Count} events.", auditEventList.AuditEvents.Count);
         }
     }
     
