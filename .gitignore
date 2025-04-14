@@ -61,9 +61,13 @@ nunit-*.xml
 # Visual Studio
 .vs/
 
+# JetBrains IDE files
+.idea/
+
 # User-specific files
 *.rsuser
 *.suo
 *.user
 *.userosscache
 *.sln.docstates
+*.DotSettings
