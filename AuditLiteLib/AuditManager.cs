@@ -66,9 +66,9 @@ public class AuditManager : IDisposable, IAsyncDisposable
     private async Task SendEventsAsync(IReadOnlyCollection<AuditEvent> eventsToSend)
     {
         var auditEventList = eventsToSend.ToAuditEventList();
-        bool success = await _client.SendEventAsync(auditEventList);
+        AuditResponse success = await _client.SendEventAsync(auditEventList);
 
-        if (success)
+        if (success.Success)
         {
             _logger.LogInformation("Successfully sent {Count} events", auditEventList.AuditEvents.Count);
         }
