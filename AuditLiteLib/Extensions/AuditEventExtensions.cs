@@ -1,5 +1,4 @@
-﻿
-using AuditLite;
+﻿using AuditLite;
 using Timestamp = Google.Protobuf.WellKnownTypes.Timestamp;
 
 namespace AuditLiteLib;

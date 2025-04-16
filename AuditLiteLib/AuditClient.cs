@@ -1,5 +1,4 @@
-﻿
-using AuditLite;
+﻿using AuditLite;
 using Grpc.Core;
 using Grpc.Net.Client;
 

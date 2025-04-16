@@ -4,7 +4,7 @@ using AuditLiteService.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
-var usePostgres = false;
+var usePostgres = true;
 
 builder.Services.AddGrpc();
 builder.Services.AddDbContext<AuditDbContext>(options =>

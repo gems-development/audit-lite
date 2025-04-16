@@ -3,9 +3,6 @@ using AuditLite;
 
 namespace AuditLiteLib;
 
-using System;
-using System.Collections.Generic;
-
 public class EventBuffer(int maxBufferSize)
 {
     private readonly ConcurrentQueue<AuditEvent> _buffer = new();
@@ -30,7 +27,7 @@ public class EventBuffer(int maxBufferSize)
         }
         catch (Exception e)
         {
-            await Console.Error.WriteLineAsync($"Error extract messages from buffer: {e.Message}");
+			Console.Error.WriteLine($"Error extract messages from buffer: {e.Message}");
             throw;
         }
         finally
