@@ -8,21 +8,21 @@ public class AuditManager : IDisposable, IAsyncDisposable
 {
     private readonly AuditConfig _config;
     private readonly EventBuffer _buffer;
-    private readonly Timer _timer;
     private readonly AuditClient _client;
-    private readonly SemaphoreSlim _semaphore = new(1, 1);
-    private readonly ILogger<AuditManager> _logger;
-    
-    public AuditManager(AuditConfig config, ILogger<AuditManager> logger)
+	private readonly ILogger<AuditManager> _logger;
+	private readonly Timer _timer;
+	private readonly SemaphoreSlim _semaphore = new(1, 1);
+
+	public AuditManager(AuditConfig config, EventBuffer buffer, AuditClient client, ILogger<AuditManager> logger)
     {
         _config = config;
-        _logger = logger;
-        _buffer = new EventBuffer(config.MaxBufferSize);
-        _timer = new Timer(TimerCallback, null, _config.FlushIntervalMilliseconds, Timeout.Infinite);
-        _client = new AuditClient(config.ServerUrl);
-    }
-    
-    public async Task CreateAuditEventAsync(string eventType, Dictionary<string, object>? optionalFields)
+        _buffer = buffer;
+        _client = client;
+		_logger = logger;
+		_timer = new Timer(TimerCallback, null, _config.FlushIntervalMilliseconds, Timeout.Infinite);
+	}
+
+	public async Task CreateAuditEventAsync(string eventType, Dictionary<string, object>? optionalFields)
     {
         var customAuditFields = ConvertToJsonDictionary(optionalFields);
         var auditEvent = new AuditEvent().FillFromDefaults(eventType, customAuditFields);
@@ -34,7 +34,7 @@ public class AuditManager : IDisposable, IAsyncDisposable
         {
             if (_buffer.IsFull())
             {
-                await PushEventsToSenderAsync();
+                await PushEventsToServiceAsync();
             }
         }
         finally
@@ -43,7 +43,7 @@ public class AuditManager : IDisposable, IAsyncDisposable
         }
     }
     
-    private async Task PushEventsToSenderAsync()
+    private async Task PushEventsToServiceAsync()
 	{
         var eventsToSend = await ExtractEventsFromBufferAsync();
             
@@ -91,17 +91,15 @@ public class AuditManager : IDisposable, IAsyncDisposable
      
     private async void TimerCallback(object? state) 
     {
-		// ToDo Стоит ли вынести эту проверку в FlushBufferedEventsAsync(), либо продублировать ее в Dispose().
-		// Тк при вызове Dispose(), в конце выполнения, может также отправиться пустой спсиок. Не то чтобы это большая проблема, но стоит обсудить.
 
 		if (_buffer.IsEmpty())
 		{
-			_logger.LogInformation("Buffer is empty. Flushing skipped");
+			_logger.LogInformation("Buffer is empty. Extract and send events skipped");
 			RestartFlushTimer();
 			return;
 		}
 
-		await PushEventsToSenderAsync();
+		await PushEventsToServiceAsync();
 
     }
     
@@ -122,14 +120,14 @@ public class AuditManager : IDisposable, IAsyncDisposable
     protected virtual void Dispose(bool disposing)
     {
         if (!disposing) return;
-		PushEventsToSenderAsync().GetAwaiter().GetResult();
+		PushEventsToServiceAsync().GetAwaiter().GetResult();
         _timer.Dispose();
         _semaphore.Dispose();
     }
 
     protected virtual async ValueTask DisposeAsyncCore()
     {
-        await PushEventsToSenderAsync().ConfigureAwait(false);
+        await PushEventsToServiceAsync().ConfigureAwait(false);
 		await _timer.DisposeAsync().ConfigureAwait(false);
         _semaphore.Dispose();
     }
