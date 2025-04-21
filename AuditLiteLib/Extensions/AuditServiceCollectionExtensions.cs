@@ -14,8 +14,8 @@ namespace AuditLiteLib.Extensions
 			var auditConfig = configBuilder.Build();
 
 			services.AddSingleton(auditConfig); 
-			services.AddSingleton<EventBuffer>(provider => new EventBuffer(auditConfig.MaxBufferSize));
-			services.AddSingleton<AuditClient>(provider => new AuditClient(auditConfig.ServerUrl));
+			services.AddSingleton(new EventBuffer(auditConfig.MaxBufferSize));
+			services.AddSingleton(new AuditClient(auditConfig.ServerUrl));
 			services.AddLogging(builder => builder.AddConsole());
 
 			services.AddSingleton<AuditManager>();
