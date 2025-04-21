@@ -7,18 +7,19 @@ namespace AuditLiteService.Services;
 
 public class AuditLoggerService : AuditLogger.AuditLoggerBase
 {
-    private readonly IAuditEventRepository _repository;
+    private readonly IAuditRepositoryFactory _factory;
 
-    public AuditLoggerService(IAuditEventRepository repository)
+    public AuditLoggerService(IAuditRepositoryFactory factory)
     {
-        _repository = repository;
+        _factory = factory;
     }
     
     public override async Task<AuditResponse> LogEvent(AuditEventList request, ServerCallContext context)
     {
+        var repository = _factory.CreateRepository();
         try
         {
-            await _repository.SaveAsync(request);
+            await repository.SaveAsync(request);
             return new AuditResponse { Success = true, Message = $"События успешно сохранены в базу данных. " +
                                                                  $"Кол-во событий:{request.AuditEvents.Count()}" };
         }
