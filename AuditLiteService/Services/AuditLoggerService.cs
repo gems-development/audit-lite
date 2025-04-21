@@ -19,18 +19,20 @@ public class AuditLoggerService : AuditLogger.AuditLoggerBase
         try
         {
             await _repository.SaveAsync(request);
-            return new AuditResponse { Success = true, Message = $"События успешно сохранены в базу данных. " +
-                                                                 $"Кол-во событий:{request.AuditEvents.Count()}" };
+            
+            return new AuditResponse 
+            { 
+                Success = true,
+                Message = $"Audit events successfully stored in database - Event count: {request.AuditEvents.Count}"
+            };
         }
         catch (Exception ex)
         {
             return new AuditResponse
             {
                 Success = false,
-                Message = $"Ошибка при сохранении событий: {ex.Message}"
+                Message = $"Failed to store {request.AuditEvents.Count} audit events. Error details: {ex.Message}"
             };
         }
-        
     }
-    
 }

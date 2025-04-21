@@ -35,6 +35,7 @@ public class AuditManager : IDisposable, IAsyncDisposable
             if (_buffer.IsFull())
             {
                 await PushEventsToServiceAsync();
+                RestartFlushTimer();
             }
         }
         finally
@@ -45,11 +46,16 @@ public class AuditManager : IDisposable, IAsyncDisposable
     
     private async Task PushEventsToServiceAsync()
 	{
-        var eventsToSend = await ExtractEventsFromBufferAsync();
-            
-        RestartFlushTimer();
-
-        await SendEventsAsync(eventsToSend);
+        try
+        {
+            var eventsToSend = await ExtractEventsFromBufferAsync();
+            await SendEventsAsync(eventsToSend);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError($"Failed to push audit events to service. Error details: {e.Message}");
+            // Todo возможно тут стоит дописать логику по сохранению событий, который не смогли отправиться.
+        }
     }
     
     private Task<IReadOnlyCollection<AuditEvent>> ExtractEventsFromBufferAsync()
@@ -66,14 +72,14 @@ public class AuditManager : IDisposable, IAsyncDisposable
     {
         var auditEventList = eventsToSend.ToAuditEventList();
         AuditResponse success = await _client.SendEventAsync(auditEventList);
-
+        
         if (success.Success)
         {
-            _logger.LogInformation("Successfully sent {Count} events", auditEventList.AuditEvents.Count);
+            _logger.LogInformation(success.Message);
         }
         else
         {
-            _logger.LogWarning("Error sending {Count} events.", auditEventList.AuditEvents.Count);
+            _logger.LogError(success.Message);
         }
     }
     
@@ -89,18 +95,23 @@ public class AuditManager : IDisposable, IAsyncDisposable
         return result;
     }
      
-    private async void TimerCallback(object? state) 
+    private async void TimerCallback(object? state)
     {
+        await _semaphore.WaitAsync();
+        try
+        {
+            if (_buffer.IsEmpty())
+            {
+                return;
+            }
 
-		if (_buffer.IsEmpty())
-		{
-			_logger.LogInformation("Buffer is empty. Extract and send events skipped");
-			RestartFlushTimer();
-			return;
-		}
-
-		await PushEventsToServiceAsync();
-
+            await PushEventsToServiceAsync();
+        }
+        finally
+        {
+            _semaphore.Release();
+            RestartFlushTimer();
+        }
     }
     
 	public void Dispose()
@@ -120,15 +131,26 @@ public class AuditManager : IDisposable, IAsyncDisposable
     protected virtual void Dispose(bool disposing)
     {
         if (!disposing) return;
-		PushEventsToServiceAsync().GetAwaiter().GetResult();
+        
         _timer.Dispose();
+        
+        if (!_buffer.IsEmpty())  
+        {
+            PushEventsToServiceAsync().GetAwaiter().GetResult();
+            _logger.LogInformation("All remaining events were successfully pushed");
+        }
         _semaphore.Dispose();
     }
 
     protected virtual async ValueTask DisposeAsyncCore()
     {
-        await PushEventsToServiceAsync().ConfigureAwait(false);
-		await _timer.DisposeAsync().ConfigureAwait(false);
+        await _timer.DisposeAsync().ConfigureAwait(false);
+        
+        if (!_buffer.IsEmpty())  
+        {
+            await PushEventsToServiceAsync().ConfigureAwait(false);
+            _logger.LogInformation("All remaining events were successfully pushed");
+        }
         _semaphore.Dispose();
     }
 }

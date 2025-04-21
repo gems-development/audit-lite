@@ -10,14 +10,21 @@ internal static class Program
 		{
 			configure.SetPredefinedConfigName("test")
 					 .SetServerUrl("http://localhost:5001")
-					 .SetFlushIntervalMilliseconds(10000)
-					 .SetMaxBufferSize(8);
+					 .SetFlushIntervalMilliseconds(3000)
+					 .SetMaxBufferSize(50000);
 		});
-
+		
 		Console.WriteLine("Начало теста...");
 
+		var eventCounter = 0;
+		
+		var options = new ParallelOptions
+		{
+			MaxDegreeOfParallelism = 8 // Устанавливаем максимальное количество потоков
+		};
+	
             // Эмуляция многопоточности.
-            await Parallel.ForEachAsync(Enumerable.Range(1, 30), async (i, cancellationToken) =>
+            await Parallel.ForEachAsync(Enumerable.Range(1, 100000), options, async (i, cancellationToken) =>
         {
             var eventData = new Dictionary<string, object>
             {
@@ -26,11 +33,13 @@ internal static class Program
             };
             
             var threadId = Thread.CurrentThread.ManagedThreadId;
-            Console.WriteLine($"[Поток {threadId}] Добавлено: {eventData}");
+            var currentEventNumber = Interlocked.Increment(ref eventCounter);
+            
+	        //Console.WriteLine($"[Поток {threadId}] Номер: {currentEventNumber} Событие: {eventData}");
             
             await auditManager.CreateAuditEventAsync("testType", eventData);
             
-            await Task.Delay(3000, cancellationToken);
+	        //await Task.Delay(100, cancellationToken); // Раньше, без задержки, таймер не срабатывал. До появления Семафора в TimerCallBack.
         });
 
         Console.WriteLine("Тестирование завершено.");
