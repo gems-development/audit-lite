@@ -25,11 +25,6 @@ public class EventBuffer(int maxBufferSize)
             }
             return eventsToFlush;
         }
-        catch (Exception e)
-        {
-			Console.Error.WriteLine($"Error extract messages from buffer: {e.Message}");
-            throw;
-        }
         finally
         {
             _semaphore.Release();
