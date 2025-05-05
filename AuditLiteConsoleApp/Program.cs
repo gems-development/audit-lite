@@ -6,12 +6,13 @@ internal static class Program
 {
     public static async Task Main(string[] args)
     {
+	    
 		await using var auditManager = AuditManagerFactory.Create(configure =>
 		{
-			configure.SetPredefinedConfigName("test")
-					 .SetServerUrl("http://localhost:5001")
-					 .SetFlushIntervalMilliseconds(3000)
-					 .SetMaxBufferSize(50000);
+			configure.SetServerUrl("http://localhost:5001")
+					 .SetFlushIntervalMilliseconds(1000) // значение -1 отключает срабатывание по таймеру в целом
+					 .SetMaxBufferSize(10000)
+					 .SetMaxChunkedRetries(3); // Значение 0 будет означать о запрете отправлять данные чанками
 		});
 		
 		Console.WriteLine("Начало теста...");
@@ -20,7 +21,7 @@ internal static class Program
 		
 		var options = new ParallelOptions
 		{
-			MaxDegreeOfParallelism = 8 // Устанавливаем максимальное количество потоков
+			MaxDegreeOfParallelism = 8
 		};
 	
             // Эмуляция многопоточности.
@@ -39,7 +40,7 @@ internal static class Program
             
             await auditManager.CreateAuditEventAsync("testType", eventData);
             
-	        //await Task.Delay(100, cancellationToken); // Раньше, без задержки, таймер не срабатывал. До появления Семафора в TimerCallBack.
+	        await Task.Delay(1, cancellationToken); // задержка для эмуляции реальных условий. Без нее таймер не будет срабатывать должным образом.
         });
 
         Console.WriteLine("Тестирование завершено.");

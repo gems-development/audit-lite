@@ -2,15 +2,14 @@
 
 public class AuditConfig
 {
-    public required string PredefinedConfigName { get; set;}
     public required string ServerUrl { get; set; }
     public long FlushIntervalMilliseconds { get; set; }
     public int MaxBufferSize { get; set; }
-    public bool EnableProtobufSerialization { get; set; }
+    public int MaxChunkedRetries { get; set; }
 
     public override string ToString()
     {
-        return $"Predefined Config: {PredefinedConfigName},mServerUrl: {ServerUrl}, FlushInterval: {FlushIntervalMilliseconds}ms, " +
-               $"MaxBufferSize: {MaxBufferSize}, ProtobufSerialization: {EnableProtobufSerialization}";
+        return $"ServerUrl: {ServerUrl}, FlushInterval: {FlushIntervalMilliseconds}ms, " +
+               $"MaxBufferSize: {MaxBufferSize}, MaxChunkedRetries: {MaxChunkedRetries}";
     }
 }
