@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace AuditLiteService.Models;
+namespace AuditLiteService.Models.Postgres;
 
 public class PostgresAuditEventEntity
 {
@@ -14,6 +14,7 @@ public class PostgresAuditEventEntity
     public DateTime EventDate { get; set; }
     
     public int EventEnvironmentId { get; set; }
+    
     public PostgresEventEnvironmentEntity PostgresEventEnvironmentEntity { get; set; } = null!;
     
     public List<PostgresCustomFieldEntity> CustomFields { get; set; } = new();

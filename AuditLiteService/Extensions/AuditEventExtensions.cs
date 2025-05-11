@@ -1,7 +1,7 @@
 ﻿using AuditLite;
-using AuditLiteService.Models;
 using AuditLiteService.Models.Elasticsearch;
 using AuditLiteService.Models.Mongo;
+using AuditLiteService.Models.Postgres;
 
 namespace AuditLiteService.Extensions;
 

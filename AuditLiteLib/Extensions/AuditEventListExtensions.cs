@@ -1,6 +1,6 @@
 ﻿using AuditLite;
 
-namespace AuditLiteLib;
+namespace AuditLiteLib.Extensions;
 
 public static class AuditEventListExtensions
 {

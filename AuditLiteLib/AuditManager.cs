@@ -1,12 +1,13 @@
 ﻿using System.Text.Json;
 using AuditLite;
 using AuditLiteLib.Configuration;
+using AuditLiteLib.Extensions;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using Microsoft.FeatureManagement;
 
 namespace AuditLiteLib;
-public class AuditManager : IDisposable, IAsyncDisposable, IAuditLiteManager
+public class AuditManager : IAuditLiteManager
 {
     private readonly AuditConfig _config;
     private readonly EventBuffer _buffer;
@@ -107,7 +108,7 @@ public class AuditManager : IDisposable, IAsyncDisposable, IAuditLiteManager
     {
         try
         {
-            var response = await _client.PingAsync();
+            await _client.PingAsync();
             _isConnectedService = true;
             _logger.LogInformation("Audit service is reachable.");
         }

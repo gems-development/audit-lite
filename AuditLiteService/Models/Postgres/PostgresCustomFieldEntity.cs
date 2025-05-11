@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace AuditLiteService.Models;
+namespace AuditLiteService.Models.Postgres;
 
 public class PostgresCustomFieldEntity
 {
@@ -15,5 +15,4 @@ public class PostgresCustomFieldEntity
     
     public int AuditEventId { get; set; }
     public PostgresAuditEventEntity PostgresAuditEventEntity { get; set; } = null!;
-
 }

@@ -1,4 +1,4 @@
-﻿using AuditLiteService.Models;
+﻿using AuditLiteService.Models.Postgres;
 using Microsoft.EntityFrameworkCore;
 
 namespace AuditLiteService.Data;

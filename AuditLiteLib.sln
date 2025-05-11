@@ -2,8 +2,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuditLiteLib", "AuditLiteLib\AuditLiteLib.csproj", "{35DDF725-F748-462E-A5A4-918BD3AFD99A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuditLiteConsoleApp", "AuditLiteConsoleApp\AuditLiteConsoleApp.csproj", "{8B03FAED-DDF8-4363-A25C-D370611E7049}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AuditLiteService", "AuditLiteService\AuditLiteService.csproj", "{82D34C50-4B9E-44E3-ADD0-034C58C49124}"
 EndProject
 Global
@@ -16,13 +14,10 @@ Global
 		{35DDF725-F748-462E-A5A4-918BD3AFD99A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{35DDF725-F748-462E-A5A4-918BD3AFD99A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{35DDF725-F748-462E-A5A4-918BD3AFD99A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8B03FAED-DDF8-4363-A25C-D370611E7049}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8B03FAED-DDF8-4363-A25C-D370611E7049}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8B03FAED-DDF8-4363-A25C-D370611E7049}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8B03FAED-DDF8-4363-A25C-D370611E7049}.Release|Any CPU.Build.0 = Release|Any CPU
 		{82D34C50-4B9E-44E3-ADD0-034C58C49124}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{82D34C50-4B9E-44E3-ADD0-034C58C49124}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{82D34C50-4B9E-44E3-ADD0-034C58C49124}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{82D34C50-4B9E-44E3-ADD0-034C58C49124}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
+

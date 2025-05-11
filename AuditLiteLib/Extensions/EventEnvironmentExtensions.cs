@@ -3,7 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using AuditLite;
 
-namespace AuditLiteLib;
+namespace AuditLiteLib.Extensions;
 
 public static class EventEnvironmentExtensions
 {
@@ -17,6 +17,7 @@ public static class EventEnvironmentExtensions
             MethodName = GetCallerMethodName()
         };
     }
+    
     private static string GetLocalIpAddress()
     {
         try
@@ -35,7 +36,7 @@ public static class EventEnvironmentExtensions
     {
         var stackTrace = new StackTrace();
 
-        foreach (var frame in stackTrace.GetFrames() ?? [])
+        foreach (var frame in stackTrace.GetFrames())
         {
             var method = frame.GetMethod();
             var declaringType = method?.DeclaringType;
@@ -52,5 +53,4 @@ public static class EventEnvironmentExtensions
 
         return "Unknown";
     }
-    
 }

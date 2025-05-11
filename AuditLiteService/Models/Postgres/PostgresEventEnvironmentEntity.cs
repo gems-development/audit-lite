@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace AuditLiteService.Models;
+namespace AuditLiteService.Models.Postgres;
 
 public class PostgresEventEnvironmentEntity
 {

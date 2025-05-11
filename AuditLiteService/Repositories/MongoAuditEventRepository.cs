@@ -1,5 +1,6 @@
 ﻿using AuditLite;
 using AuditLiteService.Extensions;
+using AuditLiteService.Interfaces;
 using AuditLiteService.Models.Mongo;
 using MongoDB.Driver;
 

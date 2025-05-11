@@ -4,18 +4,11 @@ using Grpc.Core;
 
 namespace AuditLiteService.Services;
 
-public class AuditLoggerService : AuditLogger.AuditLoggerBase
+public class AuditLoggerService(IAuditRepositoryFactory factory) : AuditLogger.AuditLoggerBase
 {
-    private readonly IAuditRepositoryFactory _factory;
-
-    public AuditLoggerService(IAuditRepositoryFactory factory)
-    {
-        _factory = factory;
-    }
-    
     public override async Task<AuditResponse> LogEvent(AuditEventList request, ServerCallContext context)
     {
-        var repository = _factory.CreateRepository();
+        var repository = factory.CreateRepository();
         try
         {
             await repository.SaveAsync(request);
@@ -35,6 +28,7 @@ public class AuditLoggerService : AuditLogger.AuditLoggerBase
             };
         }
     }
+    
     public override Task<PingResponse> Ping(PingRequest request, ServerCallContext context)
     {
         return Task.FromResult(new PingResponse());

@@ -16,7 +16,7 @@ builder.Services.AddGrpc();
 builder.Services.AddDbContext<AuditDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
 
-builder.Services.AddSingleton<IMongoClient>(sp =>
+builder.Services.AddSingleton<IMongoClient>(_ =>
 {
     var mongoUri = builder.Configuration.GetConnectionString("MongoDB");
     return new MongoClient(mongoUri);
@@ -29,7 +29,7 @@ builder.Services.AddScoped(sp =>
     return database.GetCollection<MongoAuditEventEntity>("AuditEvents");
 });
 
-builder.Services.AddSingleton<IElasticClient>(sp =>
+builder.Services.AddSingleton<IElasticClient>(_ =>
 {
     var settings = new ConnectionSettings(new Uri(builder.Configuration.GetConnectionString("Elasticsearch")!))
         .DefaultIndex("audit-events")

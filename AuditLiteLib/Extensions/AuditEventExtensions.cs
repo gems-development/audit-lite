@@ -1,7 +1,8 @@
 ﻿using AuditLite;
 using Timestamp = Google.Protobuf.WellKnownTypes.Timestamp;
 
-namespace AuditLiteLib;
+namespace AuditLiteLib.Extensions;
+
 public static class AuditEventExtensions
 {
     public static AuditEvent FillFromDefaults(this AuditEvent auditEvent, string eventType, 
