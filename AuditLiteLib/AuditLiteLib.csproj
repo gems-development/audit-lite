@@ -6,4 +6,20 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Google.Protobuf" Version="3.30.2" />
+      <PackageReference Include="Grpc.Net.Client" Version="2.70.0" />
+      <PackageReference Include="Grpc.Tools" Version="2.71.0">
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        <PrivateAssets>all</PrivateAssets>
+      </PackageReference>
+      <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.4" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.4" />
+      <PackageReference Include="Microsoft.FeatureManagement" Version="4.0.0" />
+      <PackageReference Include="protobuf-net" Version="3.2.52" />
+    </ItemGroup>
+    <ItemGroup>
+        <Protobuf Include="Protos\audit_event.proto" GrpcServices="Client" />
+    </ItemGroup>
+
 </Project>

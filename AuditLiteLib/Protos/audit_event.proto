@@ -1,0 +1,43 @@
+﻿syntax = "proto3";
+
+option csharp_namespace = "AuditLite";
+package auditlite.protos;
+
+import "google/protobuf/timestamp.proto";
+
+message EventEnvironment {
+  string user_name = 1;
+  string method_name = 2;
+  string machine_name = 3;
+  string ip_address = 4;
+}
+
+message AuditEvent {
+  string event_type = 1;
+  EventEnvironment event_environment = 2;
+  google.protobuf.Timestamp event_date = 3;
+  map<string, string> custom_fields = 4;
+}
+
+message AuditEventList {
+  repeated AuditEvent audit_events = 1;
+}
+
+message AuditResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message PingRequest{
+
+}
+
+message PingResponse{
+
+}
+
+service AuditLogger {
+  rpc LogEvent (AuditEventList) returns (AuditResponse);
+  rpc Ping (PingRequest) returns (PingResponse);
+}
+
