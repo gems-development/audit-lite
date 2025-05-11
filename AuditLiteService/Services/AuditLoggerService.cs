@@ -17,7 +17,7 @@ public class AuditLoggerService : AuditLogger.AuditLoggerBase
         var repository = _factory.CreateRepository();
         try
         {
-            await _repository.SaveAsync(request);
+            await repository.SaveAsync(request);
             
             return new AuditResponse 
             { 
@@ -33,7 +33,9 @@ public class AuditLoggerService : AuditLogger.AuditLoggerBase
                 Message = $"Failed to store {request.AuditEvents.Count} audit events. Error details: {ex.Message}"
             };
         }
-        
     }
-    
+    public override Task<PingResponse> Ping(PingRequest request, ServerCallContext context)
+    {
+        return Task.FromResult(new PingResponse());
+    }
 }

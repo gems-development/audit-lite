@@ -22,4 +22,10 @@ public class AuditClient
         var response = await _client.LogEventAsync(auditEvent);
         return response;
     }
+
+    public async Task<PingResponse> PingAsync()
+    {
+        var response = await _client.PingAsync(new PingRequest());
+        return response;
+    }
 }

@@ -23,10 +23,22 @@ message AuditEventList {
   repeated AuditEvent audit_events = 1;
 }
 
-service AuditLogger {
-  rpc LogEvent (AuditEventList) returns (AuditResponse);
-}
 message AuditResponse {
   bool success = 1;
   string message = 2;
 }
+
+message PingRequest{
+  
+}
+
+message PingResponse{
+  
+}
+
+service AuditLogger {
+  rpc LogEvent (AuditEventList) returns (AuditResponse);
+  rpc Ping (PingRequest) returns (PingResponse);
+}
+
+
