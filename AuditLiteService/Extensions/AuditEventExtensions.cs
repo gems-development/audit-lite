@@ -1,5 +1,6 @@
 ﻿using AuditLite;
 using AuditLiteService.Models;
+using AuditLiteService.Models.Elasticsearch;
 using AuditLiteService.Models.Mongo;
 
 namespace AuditLiteService.Extensions;
@@ -31,7 +32,7 @@ public static class AuditEventExtensions
         {
             EventType = request.EventType,
             EventDate = request.EventDate.ToDateTime(),
-            EventEnvironmentEntity = new MongoEventEnvironmentEntity
+            MongoEventEnvironmentEntity = new MongoEventEnvironmentEntity
             {
                 UserName = request.EventEnvironment.UserName,
                 MethodName = request.EventEnvironment.MethodName,
@@ -45,6 +46,23 @@ public static class AuditEventExtensions
                     Value = kvp.Value
                 })
                 .ToList()
+        };
+    }
+    
+    public static ElasticsearchAuditEventEntity ToElasticsearchEntity(this AuditEvent request)
+    {
+        return new ElasticsearchAuditEventEntity
+        {
+            EventType = request.EventType,
+            EventDate = request.EventDate.ToDateTime(),
+            ElasticsearchAuditEvent = new ElasticsearchEnvironmentEntity
+            {
+                UserName = request.EventEnvironment.UserName,
+                MethodName = request.EventEnvironment.MethodName,
+                MachineName = request.EventEnvironment.MachineName,
+                IpAddress = request.EventEnvironment.IpAddress
+            },
+            CustomFields = request.CustomFields.ToDictionary(kvp => kvp.Key, kvp => kvp.Value)
         };
     }
 }

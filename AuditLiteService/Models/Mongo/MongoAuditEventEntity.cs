@@ -12,6 +12,6 @@ public class MongoAuditEventEntity
     public string EventType { get; set; } = null!;
     public DateTime EventDate { get; set; }
 
-    public MongoEventEnvironmentEntity EventEnvironmentEntity { get; set; } = null!;
+    public MongoEventEnvironmentEntity MongoEventEnvironmentEntity { get; set; } = null!;
     public List<MongoCustomFieldEntity> CustomFields { get; set; } = new();
 }

@@ -1,4 +1,7 @@
-﻿namespace AuditLiteService;
+﻿using AuditLiteService.Interfaces;
+using AuditLiteService.Repositories;
+
+namespace AuditLiteService;
 
 public class AuditRepositoryFactory : IAuditRepositoryFactory
 {
@@ -18,6 +21,7 @@ public class AuditRepositoryFactory : IAuditRepositoryFactory
         {
             "MongoDB" => _provider.GetRequiredService<MongoAuditEventRepository>(),
             "Postgres" => _provider.GetRequiredService<PostgresAuditEventRepository>(),
+            "Elasticsearch" => _provider.GetRequiredService<ElasticsearchAuditEventRepository>(),
             _ => throw new NotSupportedException($"Database type {databaseType} is not supported")
         };
     }

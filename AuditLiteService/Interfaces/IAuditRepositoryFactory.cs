@@ -1,6 +1,4 @@
-﻿using AuditLite;
-
-namespace AuditLiteService;
+﻿namespace AuditLiteService.Interfaces;
 
 public interface IAuditRepositoryFactory
 {

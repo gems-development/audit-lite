@@ -1,9 +1,8 @@
 ﻿using AuditLite;
 using AuditLiteService.Data;
 using AuditLiteService.Extensions;
-using AuditLiteService.Models;
 
-namespace AuditLiteService;
+namespace AuditLiteService.Repositories;
 
 public class PostgresAuditEventRepository: IAuditEventRepository
 {

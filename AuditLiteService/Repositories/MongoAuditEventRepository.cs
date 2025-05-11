@@ -1,10 +1,9 @@
 ﻿using AuditLite;
 using AuditLiteService.Extensions;
-using AuditLiteService.Models;
 using AuditLiteService.Models.Mongo;
 using MongoDB.Driver;
 
-namespace AuditLiteService;
+namespace AuditLiteService.Repositories;
 
 public class MongoAuditEventRepository : IAuditEventRepository
 {
