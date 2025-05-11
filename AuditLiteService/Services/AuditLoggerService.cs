@@ -1,4 +1,5 @@
 ﻿using AuditLite;
+using AuditLiteService.Interfaces;
 using Grpc.Core;
 
 namespace AuditLiteService.Services;
