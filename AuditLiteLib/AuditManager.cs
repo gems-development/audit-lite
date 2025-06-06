@@ -129,19 +129,45 @@ public class AuditManager : IAuditLiteManager
             _logger.LogInformation("Auditing disabled via FeatureManager flag.");
         return res;
     }
-    
+
     private async Task PushEventsToServiceAsync()
     {
+        IReadOnlyCollection<AuditEvent> eventsToSend = Array.Empty<AuditEvent>();
         try
         {
-            var eventsToSend = await ExtractEventsFromBufferAsync();
-            
+            eventsToSend = await ExtractEventsFromBufferAsync();
+
             await SendEventsWithRetryAsync(eventsToSend, _config.MaxBufferSize, _config.MaxChunkedRetries);
         }
         catch (Exception e)
         {
             _logger.LogError($"Failed push audit events to service. Error details: {e.Message}");
-            // Todo возможно тут стоит дописать логику по сохранению событий, который не смогли отправиться.
+
+            if (eventsToSend.Count < _config.MaxBufferSize)
+            {
+                await _semaphore.WaitAsync();
+                try
+                {
+                    foreach (var evEvent in eventsToSend)
+                    {
+                        if (_buffer.IsFull())
+                        {
+                            return;
+                        }
+
+                        _buffer.AddEvent(evEvent);
+                    }
+                }
+                finally
+                {
+                    _semaphore.Release();
+                }
+            }
+            else
+            {
+                // ToDo При необходимости можно реализовать механизм локального сохранения событий.
+                _logger.LogError("Buffer is full and service connection has not been restored. Events in the current buffer will be lost.");
+            }
         }
     }
     
