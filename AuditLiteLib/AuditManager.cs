@@ -141,7 +141,7 @@ public class AuditManager : IAuditLiteManager
         }
         catch (Exception e)
         {
-            _logger.LogError($"Failed push audit events to service. Error details: {e.Message}");
+            _logger.LogError($"Problems with push audit events to service. Error details: {e.Message}");
 
             if (eventsToSend.Count < _config.MaxBufferSize)
             {
