@@ -4,22 +4,45 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+
+        <!-- NuGet metadata -->
+        <PackageId>AuditLiteLib</PackageId>
+        <Version>1.1.0</Version>
+        <Title>AuditLite Library</Title>
+        <Authors>Petr0131; Kolistro</Authors>
+        <Company>Petr0131, Kolistro</Company>
+        <Description>An application for auditing user operations.</Description>
+        <PackageTags>audit; logging; monitoring; security</PackageTags>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <RepositoryUrl>https://github.com/gems-development/audit-lite</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/gems-development/audit-lite</PackageProjectUrl>
+        <Copyright>Copyright 2025 Petr0131, Kolistro</Copyright>
+        <PackageReleaseNotes>Initial release of the AuditLite library for tracking user actions.</PackageReleaseNotes>
+        <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+        
+        <PackageReadmeFile>README.md</PackageReadmeFile>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Google.Protobuf" Version="3.30.2" />
-      <PackageReference Include="Grpc.Net.Client" Version="2.70.0" />
-      <PackageReference Include="Grpc.Tools" Version="2.71.0">
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        <PrivateAssets>all</PrivateAssets>
-      </PackageReference>
-      <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.4" />
-      <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.4" />
-      <PackageReference Include="Microsoft.FeatureManagement" Version="4.0.0" />
-      <PackageReference Include="protobuf-net" Version="3.2.52" />
+        <None Include="..\README.md" Pack="true" PackagePath="" Link="README.md" />
     </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Google.Protobuf" Version="3.30.2" />
+        <PackageReference Include="Grpc.Net.Client" Version="2.70.0" />
+        <PackageReference Include="Grpc.Tools" Version="2.71.0">
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <PrivateAssets>all</PrivateAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.4" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.4" />
+        <PackageReference Include="Microsoft.FeatureManagement" Version="4.0.0" />
+        <PackageReference Include="protobuf-net" Version="3.2.52" />
+    </ItemGroup>
+
     <ItemGroup>
         <Protobuf Include="Protos\audit_event.proto" GrpcServices="Client" />
     </ItemGroup>
 
 </Project>
+
